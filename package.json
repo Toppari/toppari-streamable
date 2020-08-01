@@ -11,6 +11,7 @@
   "dependencies": {
     "next": "9.5.0",
     "react": "16.13.1",
-    "react-dom": "16.13.1"
+    "react-dom": "16.13.1",
+    "vercel": "^19.2.0"
   }
 }
