@@ -1,11 +1,11 @@
 import styles from '../styles/index.module.css';
 
-export default function Home({ videos }) {
+export default function Home({ data }) {
   return (
     <div className={styles.wrapper}>
-      <h1>Videoita yhteensä: {videos.total}</h1>
+      <h1>Videoita yhteensä: {data.total}</h1>
       <h3>Viimeisimmät 10 videota</h3>
-      {videos.videos.map(
+      {data.videos.map(
         ({ file_id, url, title, files, dynamic_thumbnail_url: poster }) => (
           <div key={file_id}>
             <h4>{title}</h4>
@@ -17,7 +17,7 @@ export default function Home({ videos }) {
               preload='metadata'
             >
               {/* mp4-high is available after streamable has fully processed the video */}
-              {files['mp4-high'].url && (
+              {files['mp4-high'] && (
                 <source
                   src={`https:${files['mp4-high'].url}`}
                   type='video/mp4'
@@ -70,9 +70,9 @@ export const getServerSideProps = async () => {
 
   const parsedCookies = parseCookies(loginResponse);
 
-  // Only fetch latest 10 for now
+  // Fetch latest 30 videos
   const videosResponse = await fetch(
-    'https://ajax.streamable.com/videos?sort=date_added&sortd=DESC&count=10&page=1',
+    'https://ajax.streamable.com/videos?sort=date_added&sortd=DESC&count=30',
     {
       method: 'GET',
       credentials: 'include',
@@ -82,9 +82,18 @@ export const getServerSideProps = async () => {
     },
   );
 
-  const videos = await videosResponse.json();
+  // {total: 123, videos: [{}...]}
+  const parsedVideosResponse = await videosResponse.json();
+
+  // Take the latest 10 PUBLIC videos which streamable has finished processing
+  // meaning they have file url
+  const publicVideos = parsedVideosResponse.videos
+    .filter(({ privacy, files }) => privacy === 0 && files.mp4.url)
+    .slice(0, 10);
 
   return {
-    props: { videos },
+    props: {
+      data: { total: parsedVideosResponse.total, videos: [...publicVideos] },
+    },
   };
 };
