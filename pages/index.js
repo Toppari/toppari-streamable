@@ -1,19 +1,29 @@
+import Head from 'next/head';
 import styles from '../styles/index.module.css';
 
 export default function Home({ data }) {
   return (
     <div className={styles.wrapper}>
+      <Head>
+        <title>Topparin klipit</title>
+        <meta
+          name='description'
+          content='Videoita hauskoista tilanteista ja hyvistä pelihetkistä'
+          key='description'
+        />
+      </Head>
+
       <h1>Videoita yhteensä: {data.total}</h1>
-      <h3>Viimeisimmät 10 videota</h3>
+      <h2>Viimeisimmät 10 videota</h2>
       {data.videos.map(
         ({ file_id, url, title, files, dynamic_thumbnail_url: poster }) => (
           <div key={file_id}>
-            <h4>{title}</h4>
+            <h3>{title}</h3>
             <video
               controls
               controlsList='nodownload'
               width='720'
-              poster={poster}
+              poster={`https:${poster}`}
               preload='metadata'
             >
               {/* mp4-high is available after streamable has fully processed the video */}
