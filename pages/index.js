@@ -7,9 +7,9 @@ export default function Home({ data }) {
       <Head>
         <title>Topparin klipit</title>
         <meta
-          name='description'
-          content='Videoita hauskoista tilanteista ja hyvistä pelihetkistä'
-          key='description'
+          name="description"
+          content="Videoita hauskoista tilanteista ja hyvistä pelihetkistä"
+          key="description"
         />
       </Head>
 
@@ -21,26 +21,26 @@ export default function Home({ data }) {
             <h3>{title}</h3>
             <video
               controls
-              controlsList='nodownload'
-              width='720'
+              controlsList="nodownload"
+              width="720"
               poster={`https:${poster}`}
-              preload='metadata'
+              preload="metadata"
             >
               {/* mp4-high is available after streamable has fully processed the video */}
               {files['mp4-high'] && (
                 <source
                   src={`https:${files['mp4-high'].url}`}
-                  type='video/mp4'
+                  type="video/mp4"
                 />
               )}
-              <source src={`https:${files.mp4.url}`} type='video/mp4' />
+              <source src={`https:${files.mp4.url}`} type="video/mp4" />
               <p>
                 Selaimesi ei tue embed videoita. Tässä
                 <a
                   style={{ margin: '3px' }}
                   href={url}
-                  target='_blank'
-                  rel='noreferrer'
+                  target="_blank"
+                  rel="noreferrer"
                 >
                   linkki
                 </a>
