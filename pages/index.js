@@ -1,7 +1,62 @@
 import Head from 'next/head';
 import styles from '../styles/index.module.css';
 
-export default function Home({ data }) {
+export const getStaticProps = async () => {
+  const parseCookies = (response) => {
+    const raw = response.headers.raw()['set-cookie'];
+    return raw
+      .map((entry) => {
+        const parts = entry.split(';');
+        const cookiePart = parts[0];
+        return cookiePart;
+      })
+      .join(';');
+  };
+
+  const loginResponse = await fetch('https://ajax.streamable.com/check', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      password: process.env.STREAMABLE_PASSWORD,
+      username: process.env.STREAMABLE_USERNAME,
+    }),
+  });
+
+  const parsedCookies = parseCookies(loginResponse);
+
+  // Fetch latest 15 videos
+  const videosResponse = await fetch(
+    'https://ajax.streamable.com/videos?sort=date_added&sortd=DESC&count=15',
+    {
+      method: 'GET',
+      headers: {
+        cookie: parsedCookies,
+      },
+    },
+  );
+
+  // {total: 123, videos: [{}...]}
+  const parsedVideosResponse = await videosResponse.json();
+
+  // Take the latest 10 PUBLIC videos which streamable has finished processing
+  // meaning they have file url
+  const publicVideos = parsedVideosResponse.videos
+    .filter(({ privacy, files }) => privacy === 0 && files.mp4.url)
+    .slice(0, 10);
+
+  return {
+    props: {
+      totalCount: parsedVideosResponse.total,
+      videos: publicVideos,
+    },
+    // https://nextjs.org/docs/basic-features/data-fetching#incremental-static-regeneration
+    revalidate: 60,
+  };
+};
+
+export default function Home({ totalCount, videos }) {
   return (
     <div className={styles.wrapper}>
       <Head>
@@ -13,9 +68,9 @@ export default function Home({ data }) {
         />
       </Head>
 
-      <h1>Videoita yhteensä: {data.total}</h1>
+      <h1>Videoita yhteensä: {totalCount}</h1>
       <h2>Viimeisimmät 10 videota</h2>
-      {data.videos.map(
+      {videos.map(
         ({ file_id, url, title, files, dynamic_thumbnail_url: poster }) => (
           <div key={file_id}>
             <h3>{title}</h3>
@@ -53,57 +108,3 @@ export default function Home({ data }) {
     </div>
   );
 }
-
-export const getServerSideProps = async () => {
-  const parseCookies = (response) => {
-    const raw = response.headers.raw()['set-cookie'];
-    return raw
-      .map((entry) => {
-        const parts = entry.split(';');
-        const cookiePart = parts[0];
-        return cookiePart;
-      })
-      .join(';');
-  };
-
-  const loginResponse = await fetch('https://ajax.streamable.com/check', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-    body: JSON.stringify({
-      password: process.env.STREAMABLE_PASSWORD,
-      username: process.env.STREAMABLE_USERNAME,
-    }),
-  });
-
-  const parsedCookies = parseCookies(loginResponse);
-
-  // Fetch latest 30 videos
-  const videosResponse = await fetch(
-    'https://ajax.streamable.com/videos?sort=date_added&sortd=DESC&count=30',
-    {
-      method: 'GET',
-      credentials: 'include',
-      headers: {
-        cookie: parsedCookies,
-      },
-    },
-  );
-
-  // {total: 123, videos: [{}...]}
-  const parsedVideosResponse = await videosResponse.json();
-
-  // Take the latest 10 PUBLIC videos which streamable has finished processing
-  // meaning they have file url
-  const publicVideos = parsedVideosResponse.videos
-    .filter(({ privacy, files }) => privacy === 0 && files.mp4.url)
-    .slice(0, 10);
-
-  return {
-    props: {
-      data: { total: parsedVideosResponse.total, videos: [...publicVideos] },
-    },
-  };
-};
