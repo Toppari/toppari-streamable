@@ -72,12 +72,12 @@ export default function Home({ totalCount, videos }) {
       <h2>Viimeisimmät 10 videota</h2>
       {videos.map(
         ({ file_id, url, title, files, dynamic_thumbnail_url: poster }) => (
-          <div key={file_id}>
+          <div className={styles.videoWrapper} key={file_id}>
             <h3>{title}</h3>
             <video
+              className={styles.video}
               controls
               controlsList="nodownload"
-              width="720"
               poster={`https:${poster}`}
               preload="metadata"
             >
