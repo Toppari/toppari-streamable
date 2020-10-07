@@ -1,6 +1,9 @@
 import Head from 'next/head';
 import styles from '../styles/index.module.css';
 
+// TODO: Should/Could I change to use streamables own embed
+// Will that result to unnecessary requests?
+// But probably fits streamable terms better...
 export const getStaticProps = async () => {
   const parseCookies = (response) => {
     const raw = response.headers.raw()['set-cookie'];
@@ -70,41 +73,36 @@ export default function Home({ totalCount, videos }) {
 
       <h1>Videoita yhteensä: {totalCount}</h1>
       <h2>Viimeisimmät 10 videota</h2>
-      {videos.map(
-        ({ file_id, url, title, files, dynamic_thumbnail_url: poster }) => (
-          <div className={styles.videoWrapper} key={file_id}>
-            <h3>{title}</h3>
-            <video
-              className={styles.video}
-              controls
-              controlsList="nodownload"
-              poster={`https:${poster}`}
-              preload="metadata"
-            >
-              {/* mp4-high is available after streamable has fully processed the video */}
-              {files['mp4-high'] && (
-                <source
-                  src={`https:${files['mp4-high'].url}`}
-                  type="video/mp4"
-                />
-              )}
-              <source src={`https:${files.mp4.url}`} type="video/mp4" />
-              <p>
-                Selaimesi ei tue embed videoita. Tässä
-                <a
-                  style={{ margin: '3px' }}
-                  href={url}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  linkki
-                </a>
-                videoon.
-              </p>
-            </video>
-          </div>
-        ),
-      )}
+      {videos.map(({ file_id, url, title, files, poster_url }) => (
+        <div className={styles.videoWrapper} key={file_id}>
+          <h3>{title}</h3>
+          <video
+            className={styles.video}
+            controls
+            controlsList="nodownload"
+            poster={`https:${poster_url}`}
+            preload="none"
+          >
+            {/* mp4-high is available after streamable has fully processed the video */}
+            {files['mp4-high'] && (
+              <source src={`https:${files['mp4-high'].url}`} type="video/mp4" />
+            )}
+            <source src={`https:${files.mp4.url}`} type="video/mp4" />
+            <p>
+              Selaimesi ei tue embed videoita. Tässä
+              <a
+                style={{ margin: '3px' }}
+                href={url}
+                target="_blank"
+                rel="noreferrer"
+              >
+                linkki
+              </a>
+              videoon.
+            </p>
+          </video>
+        </div>
+      ))}
     </div>
   );
 }
